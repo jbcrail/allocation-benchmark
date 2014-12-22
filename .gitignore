@@ -1,0 +1,5 @@
+allocation_bench
+random_*
+*.csv
+*.o
+*.svg
