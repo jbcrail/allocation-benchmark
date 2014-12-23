@@ -1,7 +1,3 @@
-// Linux/OS X: gcc -g -std=gnu99 -Wall -Werror -o bench_initialize bench_initialize.c -lrt
-//
-// Generate test data using `dd if=/dev/urandom bs=$N count=1 >output` for $N bytes
-
 #include <assert.h>
 #include <fcntl.h>
 #include <inttypes.h>
