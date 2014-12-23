@@ -7,12 +7,18 @@ PLOT=allocation_bench.gnu
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || $(ECHO) not')
 
-ifeq ($(uname_S),$(filter $(uname_S),Linux FreeBSD))
-	LIBS+=-lrt
+ifeq ($(uname_S),$(filter $(uname_S),FreeBSD))
+	LIBS+=-lrt -lm
+endif
+ifeq ($(uname_S),$(filter $(uname_S),Linux))
+	LIBS+=-lrt -lm
+	DDFLAGS="iflag=fullblock"
+	DATA=$(addprefix bench_,1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M)
+else
+	DATA=$(addprefix bench_,1k 2k 4k 8k 16k 32k 64k 128k 256k 512k 1m 2m 4m 8m 16m 32m 64m)
 endif
 
 ITERATIONS=250
-DATA=$(addprefix bench_,1K 2K 4K 8K 16K 32K 64K 128K 256K 512K 1M 2M 4M 8M 16M 32M 64M)
 PROGRAM=allocation_bench
 
 .SECONDARY:
@@ -26,7 +32,7 @@ $(PROGRAM): $(OBJ)
 all: $(PROGRAM)
 
 random_%:
-	-@dd if=/dev/urandom bs=$(shell $(ECHO) $(@:random_%=%) | tr A-Z a-z) count=1 >$@ 2>&1
+	-@dd if=/dev/urandom bs=$(shell $(ECHO) $(@:random_%=%)) count=1 $(DDFLAGS) >$@ 2>&1
 
 bench_%: random_%
 	@$(ECHO) -n " $*"
