@@ -32,11 +32,11 @@ bench_%: random_%
 	@$(ECHO) -n " $*"
 	@$(ECHO) -n $* >>$(CSV)
 	@$(ECHO) -n " " >>$(CSV)
-	@$(ECHO) -n $(shell ./$(PROGRAM) 1 $(ITERATIONS) $< | sed -e 's/^.*:[ ]*//' -e 's/ .*//') >>$(CSV)
+	@$(ECHO) -n $(shell ./$(PROGRAM) 1 $(ITERATIONS) $< | sed -e 's/^.*:[ ]*//' | cut -d' ' -f3) >>$(CSV)
 	@$(ECHO) -n " " >>$(CSV)
-	@$(ECHO) -n $(shell ./$(PROGRAM) 2 $(ITERATIONS) $< | sed -e 's/^.*:[ ]*//' -e 's/ .*//') >>$(CSV)
+	@$(ECHO) -n $(shell ./$(PROGRAM) 2 $(ITERATIONS) $< | sed -e 's/^.*:[ ]*//' | cut -d' ' -f3) >>$(CSV)
 	@$(ECHO) -n " " >>$(CSV)
-	@$(ECHO) $(shell ./$(PROGRAM) 3 $(ITERATIONS) $< | sed -e 's/^.*:[ ]*//' -e 's/ .*//') >>$(CSV)
+	@$(ECHO) $(shell ./$(PROGRAM) 3 $(ITERATIONS) $< | sed -e 's/^.*:[ ]*//' | cut -d' ' -f3) >>$(CSV)
 
 .PHONY: pre_bench
 pre_bench: all

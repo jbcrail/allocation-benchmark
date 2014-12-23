@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,21 +37,36 @@ void get_monotonic_clock(struct timespec *t)
 }
 #endif
 
+int compare_samples(const void *a, const void *b)
+{
+  const uint64_t *arg1 = a;
+  const uint64_t *arg2 = b;
+
+  return *arg1 - *arg2;
+}
+
 #define ELAPSED(A, B) (1000000000lu * (uint64_t)(B.tv_sec - A.tv_sec) + B.tv_nsec - A.tv_nsec)
 
-#define BENCH_SETUP() struct timespec tps, tpe; \
-  uint64_t cumulative = 0
+#define BENCH_SETUP() struct timespec tps, tpe;
 
 #define BENCH_START(FD, NUM_TESTS) uint32_t ntests = NUM_TESTS; \
+  uint64_t *samples = (uint64_t *)malloc(sizeof(uint64_t) * ntests); \
   for (int i = 0; i < NUM_TESTS; i++) { \
   lseek(FD, 0, SEEK_SET); \
   get_monotonic_clock(&tps)
 
 #define BENCH_END(S, PTR) get_monotonic_clock(&tpe); \
-  cumulative += ELAPSED(tps, tpe); \
+  samples[i] = ELAPSED(tps, tpe); \
   free(PTR); \
   } \
-  printf("%-21s %" PRIu64 " ns/op\n", S, cumulative / ntests)
+  qsort(samples, ntests, sizeof(uint64_t), compare_samples); \
+  printf("%-21s ", S); \
+  printf("%" PRIu64 " ", samples[0]); \
+  printf("%" PRIu64 " ", (samples[ntests/4]+samples[ntests/4+1])/2); \
+  printf("%" PRIu64 " ", (samples[ntests/2-1]+samples[ntests/2])/2); \
+  printf("%" PRIu64 " ", (samples[ntests-ntests/4-1]+samples[ntests-ntests/4])/2); \
+  printf("%" PRIu64 "\n", samples[ntests-1]); \
+  free(samples);
 
 void bench_no_initialization(int fd, uint32_t num_tests, size_t bytes, char *ptr)
 {
@@ -102,7 +118,9 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  uint32_t num_tests = (uint32_t)atoi(argv[2]);
+  // Round number of tests to nearest multiple of four, thus,
+  // simplifying the quartile calculations
+  uint32_t num_tests = (uint32_t)(ceil(atoi(argv[2]) / 4) * 4);
   int fd = open(argv[3], O_RDONLY);
   int bytes = lseek(fd, 0, SEEK_END) + 1;
   char *ptr = NULL;
